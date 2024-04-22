@@ -4,6 +4,8 @@ import time
 from urllib.parse import quote_plus
 from datetime import datetime
 
+DEFAULT_IMAGE_URL = 'https://t3.ftcdn.net/jpg/04/60/01/36/360_F_460013622_6xF8uN6ubMvLx0tAJECBHfKPoNOR5cRa.jpg'
+
 
 def fetch_hotels(destination, start_date, end_date):
     with sync_playwright() as pw:
@@ -24,7 +26,7 @@ def fetch_hotels(destination, start_date, end_date):
             print(f"Error clicking 'Show More': {e}")
 
         hotels = []
-        cards = page.locator('[data-stid="lodging-card-responsive"]').all()
+        cards = page.locator('[data-stid="lodging-card-responsive"]').all()[:15]
         print(f"Found {len(cards)} cards.")
 
         for card in cards:
@@ -32,12 +34,14 @@ def fetch_hotels(destination, start_date, end_date):
             price_locator = card.locator('div[data-test-id="price-summary-message-line"] div.uitk-type-200:has-text("total")')
             price= price_locator.text_content() if price_locator.is_visible() else 'N/A'
             image_locator = card.locator("figure.uitk-image img.uitk-image-media").first
-            # image_url = image_locator.get_attribute('src') if image_locator.is_visible() else 'default-image.jpg'
-            if image_locator.is_visible():
-                image_url = image_locator.get_attribute('src')
-            else:
-                image_locator.wait_for(state="visible")
-                image_url = image_locator.get_attribute('src') if image_locator.is_visible() else 'default-image.jpg'
+            image_url = image_locator.get_attribute('src') if image_locator.is_visible() else DEFAULT_IMAGE_URL
+
+            # if image_locator.is_visible():
+            #     image_url = image_locator.get_attribute('src')
+            # else:
+            #     image_locator.wait_for(state="visible", timeout=5000)
+            #     image_url = image_locator.get_attribute('src') if image_locator.is_visible() else DEFAULT_IMAGE_URL
+
 
             hotel = {'name': title, 'image_url': image_url, 'price': price}
             # hotel = {'name': title,  'price': price}
