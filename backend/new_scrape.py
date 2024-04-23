@@ -1,16 +1,32 @@
-
 from playwright.sync_api import sync_playwright
 import time
 from urllib.parse import quote_plus
 from datetime import datetime
+from random import randint
+from fake_useragent import UserAgent
 
 DEFAULT_IMAGE_URL = 'https://t3.ftcdn.net/jpg/04/60/01/36/360_F_460013622_6xF8uN6ubMvLx0tAJECBHfKPoNOR5cRa.jpg'
 
 
 def fetch_hotels(destination, start_date, end_date):
     with sync_playwright() as pw:
-        browser = pw.chromium.launch(headless=False)  
-        page = browser.new_page() 
+        # browser = pw.chromium.launch(headless=False)  
+        # page = browser.new_page() 
+
+        browser = pw.chromium.launch(headless=True)  
+        width = randint(1024, 1920)
+        height = randint(768, 1080)
+        ua = UserAgent()
+        random_user_agent = ua.random
+        print("Using User Agent:", random_user_agent)
+        context = browser.new_context(
+            user_agent=random_user_agent,
+            viewport={'width': width, 'height': height},
+            permissions=["notifications"],
+            extra_http_headers={"Accept-Language": "en-US,en;q=0.9"}
+        )       
+        page = context.new_page() 
+
         from urllib.parse import quote_plus
         destination_encoded = quote_plus(destination)
         url = f"https://www.expedia.com/Hotel-Search?destination={destination_encoded}&flexibility=0_DAY&d1={start_date}&startDate={start_date}&d2={end_date}&endDate={end_date}&adults=2&rooms=1"
@@ -24,6 +40,8 @@ def fetch_hotels(destination, start_date, end_date):
                 page.wait_for_load_state('networkidle')
         except Exception as e:
             print(f"Error clicking 'Show More': {e}")
+
+        # print(page.content())
 
         hotels = []
         cards = page.locator('[data-stid="lodging-card-responsive"]').all()[:15]
