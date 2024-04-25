@@ -6,6 +6,7 @@ function SearchPage() {
   const [destination, setDestination] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [loading, setLoading] = useState(false);  // State to manage loading indicator
   const [error, setError] = useState('');
 
   const handleSubmit = async (event) => {
@@ -14,6 +15,9 @@ function SearchPage() {
       setError('Please fill in all fields');
       return;
     }
+
+    setError('');
+    setLoading(true);  // Set loading to true before the request
 
     try {
       const response = await fetch('http://127.0.0.1:5000/search', {
@@ -24,6 +28,8 @@ function SearchPage() {
         body: JSON.stringify({ destination, start_date: startDate, end_date: endDate }),
       });
       const data = await response.json();
+      setLoading(false);  // Set loading to false after the request is processed
+
       if (response.ok) {
         navigate('/results', { state: { results: data } });
       } else {
@@ -32,6 +38,7 @@ function SearchPage() {
     } catch (error) {
       console.error(error);
       alert('Failed to fetch results');
+      setLoading(false);  // Ensure loading is set to false if an error occurs
     }
   };
 
@@ -56,11 +63,12 @@ function SearchPage() {
           </label>
           <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="end-date" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
         </div>
-        {error && <p className="text-red-500">{error}</p>}
-        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
-          Search
+        {error && <p className="text-red-500 text-xs italic">{error}</p>}
+        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit" disabled={loading}>
+          {loading ? 'Searching...' : 'Search'}
         </button>
       </form>
+      {loading && <div className="text-center text-gray-500">Loading...</div>}
     </div>
   );
 }

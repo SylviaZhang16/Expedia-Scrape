@@ -1,20 +1,21 @@
-from flask import Flask, request, jsonify
+from quart import Quart, request, jsonify
 import asyncio
-from new_scrape import fetch_hotels  
-from flask_cors import CORS
+from new_scrape import fetch_hotels 
+from quart_cors import cors
 
-app = Flask(__name__)
-CORS(app)
+app = Quart(__name__)
+app = cors(app) 
+
+
 
 @app.route('/')
-def home():
+async def home():
     return "Welcome to Hotel Search API!"
 
-
 @app.route('/search', methods=['POST'])
-def search():
-    data = request.json
-    hotels = fetch_hotels(data['destination'], data['start_date'], data['end_date'])
+async def search():
+    data = await request.get_json()
+    hotels = await fetch_hotels(data['destination'], data['start_date'], data['end_date'])
     return jsonify(hotels)
 
 if __name__ == '__main__':
